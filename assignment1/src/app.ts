@@ -1,14 +1,12 @@
-import express from 'express'
-import sql from './db'
+import express from "express";
+import authRouter from "./routes/auth.routes.ts";
 
+const app = express();
+app.use(express.json());
+app.use("/auth", authRouter);
 
-const app=express()
+app.get("/healthcheck", async (_, res) => {
+  res.status(200).send("Server connection is good");
+});
 
-app.get("/",async (_, res)=> {
-    const data= await sql`Select * from users`
-    console.log(data)
-    res.send("Hi, Harmis")
-})
-
-
-export default app
+export default app;

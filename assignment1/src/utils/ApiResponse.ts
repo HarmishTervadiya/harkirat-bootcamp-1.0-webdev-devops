@@ -1,12 +1,10 @@
-class ApiResponse<T>{
-    success: true;
-    data: T;
-    error: null;
-    constructor(data:T){
-        this.success=true;
-        this.data=data
-        this.error=null
-    }
+export default class ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error: string | null;
+  constructor(success: boolean, data: T, error: string | null) {
+    this.success = success;
+    this.data = data;
+    this.error = error;
+  }
 }
-
-export default ApiResponse

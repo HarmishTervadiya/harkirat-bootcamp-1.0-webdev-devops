@@ -1,6 +1,6 @@
-import { neon } from '@neondatabase/serverless';
-import { env } from '../../env';
+import { neon } from "@neondatabase/serverless";
+import { config } from "../../config";
 
-const sql = neon(env.DB_URL ?? "");
+const sql = neon(config.DB_URL ?? "");
 
-export default sql 
+export default sql;
