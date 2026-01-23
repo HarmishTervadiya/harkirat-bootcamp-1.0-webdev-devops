@@ -1,7 +1,7 @@
 import { config } from "../../config";
-import sql from "../db";
-import ApiResponse from "../utils/ApiResponse";
-import asyncHandler from "../utils/asyncHandler";
+import {sql} from "../db";
+import {ApiResponse} from "../utils/ApiResponse";
+import {asyncHandler} from "../utils/asyncHandler";
 import jwt from "jsonwebtoken";
 
 const signUpUser = asyncHandler(async (req, res) => {

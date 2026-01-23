@@ -1,4 +1,4 @@
-export default class ApiResponse<T> {
+export class ApiResponse<T> {
   success: boolean;
   data: T;
   error: string | null;
@@ -8,3 +8,4 @@ export default class ApiResponse<T> {
     this.error = error;
   }
 }
+
