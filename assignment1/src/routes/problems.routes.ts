@@ -4,7 +4,7 @@ import verifyJwt from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/:problemId?", verifyJwt, getDsaProblemDetails)
+router.get("/:problemId", verifyJwt, getDsaProblemDetails)
 
 router.post("/:problemId/submit", verifyJwt, submitDsaAnswer)
 

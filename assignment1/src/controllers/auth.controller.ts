@@ -71,7 +71,7 @@ const signInUser = asyncHandler(async (req, res) => {
   }
 
   const user =
-    await sql`select email, password from users where email=${email}`;
+    await sql`select * from users where email=${email}`;
   if (user.length > 0 && !user[0]) {
     return res
       .status(401)
@@ -89,7 +89,7 @@ const signInUser = asyncHandler(async (req, res) => {
   }
 
   const payload = {
-    id: crypto.randomUUID(),
+    id: user[0]?.id,
     name: user[0]?.name,
     role: user[0]?.role,
   };

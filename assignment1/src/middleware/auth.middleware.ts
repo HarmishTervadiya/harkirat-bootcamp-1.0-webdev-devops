@@ -1,6 +1,6 @@
 import { config } from "../../config";
-import ApiResponse from "../utils/ApiResponse";
-import asyncHandler from "../utils/asyncHandler";
+import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
 import jwt from "jsonwebtoken";
 
 const verifyJwt = asyncHandler(async (req, res, next) => {
@@ -8,21 +8,28 @@ const verifyJwt = asyncHandler(async (req, res, next) => {
 
   const token = authorization?.split(" ")[1];
   if (!token) {
+    console.log("auth.middleware --> Acces Token is empty");
     return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
   }
 
   const decodedToken: any = jwt.verify(token, config.JWT_SECRET!);
 
   if (!decodedToken) {
+    console.log("auth.middleware --> Invalid acces token");
     return res
       .status(401)
       .json(new ApiResponse(false, {}, "INVALID_ACCESS_TOKEN"));
   }
 
+  const { id, name, role } = decodedToken;
+  if ([id, name, role].some((field) => !field)) {
+    return res.status(401).json(new ApiResponse(false, {}, "UNAUTHORIZED"));
+  }
+
   req.user = {
-    id: decodedToken.id,
-    name: decodedToken.name,
-    role: decodedToken.role,
+    id: id,
+    name: name,
+    role: role,
   };
 
   next();
