@@ -12,3 +12,62 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role{
+  STUDENT
+  INSTRUCTOR
+}
+
+model User{
+  id String @id @default(uuid()) 
+  name String
+  email String @unique
+  password String
+  role Role @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  //relations
+  courses Course[]
+  purchases Purchase[]
+}
+
+model Course{
+  id String @id @default(uuid())
+  title String 
+  description String?
+  price Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  
+  // relations
+  instructor User @relation(fields: [instructorId], references: [id])
+  instructorId String
+
+  lessons Lesson[]
+  purchases Purchase[]
+}
+
+model Lesson{
+  id String @id @default(uuid())
+  title String
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  //relations
+  course Course @relation(fields: [courseId], references: [id])
+  courseId String
+}
+
+model Purchase{
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  //relations
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  course Course @relation(fields: [courseId], references: [id])
+  courseId String
+
+}
