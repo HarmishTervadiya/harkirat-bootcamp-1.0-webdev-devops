@@ -6,6 +6,16 @@ import { asyncHandler } from "../utils/asyncHandler";
 export const purchaseCourse = asyncHandler(async (req, res) => {
   const { courseId } = req.body;
 
+  const existingPurchase = await prisma.purchase.findFirst({
+    where: { userId: req.user!.id },
+  });
+
+  if (existingPurchase) {
+    return res
+      .status(409)
+      .json(new ApiError("Course is already purchased", 409));
+  }
+
   const purchasedCourse = await prisma.purchase.create({
     data: { courseId, userId: req.user!.id },
     include: {

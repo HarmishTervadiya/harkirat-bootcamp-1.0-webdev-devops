@@ -29,7 +29,18 @@ export const createCourse = asyncHandler(async (req, res) => {
 });
 
 export const getCourses = asyncHandler(async (req, res) => {
-  const courses = await prisma.course.findMany();
+  const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+
+  const offSet = (page - 1) * limit;
+
+  const courses = await prisma.course.findMany({
+    skip: offSet,
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   if (!courses) {
     return res.status(404).json(new ApiError("Courses not found", 404));
@@ -125,18 +136,16 @@ export const getCourseRevenue = asyncHandler(async (req, res) => {
   }
 
   const totalRevenue = course._count.purchases * course.price;
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        {
-          id: course.id,
-          name: course.title,
-          price: course.price,
-          totalPurchases: course._count.purchases,
-          totalRevenue,
-        },
-        "Revenue fetched successfully",
-      ),
-    );
+  return res.status(200).json(
+    new ApiResponse(
+      {
+        id: course.id,
+        name: course.title,
+        price: course.price,
+        totalPurchases: course._count.purchases,
+        totalRevenue,
+      },
+      "Revenue fetched successfully",
+    ),
+  );
 });
