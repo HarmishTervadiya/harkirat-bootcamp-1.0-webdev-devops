@@ -6,6 +6,6 @@ export class ApiError {
   constructor(error: string | null, statusCode: number) {
     this.error = error;
     this.statusCode = statusCode;
-    this.timestamp = new Date().getTime().toString();
+    this.timestamp = new Date().toISOString();
   }
 }

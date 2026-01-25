@@ -11,7 +11,7 @@ export const signUp = asyncHandler(async (req, res) => {
   const validatation = z.safeParse(SignupSchema, req.body);
 
   if (validatation.error) {
-    console.log("Sign up validation failed", validatation.error);
+    console.log("Sign up validation failed", validatation.error.message);
     return res.status(400).json(new ApiError("Invalid data", 400));
   }
 
@@ -56,7 +56,7 @@ export const login = asyncHandler(async (req, res) => {
   const validatedData = z.safeParse(LoginSchema, req.body);
 
   if (validatedData.error) {
-    console.log("Data validation failed for login", validatedData.error);
+    console.log("Data validation failed for login", validatedData.error.message);
     return res.status(400).json(new ApiError("Invalid data", 400));
   }
 
