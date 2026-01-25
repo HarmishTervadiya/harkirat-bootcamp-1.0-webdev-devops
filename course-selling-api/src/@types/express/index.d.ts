@@ -1,16 +1,16 @@
-interface User{
-    id: string,
-    name: string,
-    role: string
+import { Request } from 'express';
+
+interface User {
+  id: number;
+  name: string;
+  role: string
 }
 
-declare global{
-    namespace express{
-        interface Request{
-
-            user?:User
-        }
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
     }
+  }
 }
-
-export {}
+export {};

@@ -2,7 +2,7 @@ import z from "zod";
 
 export const SignupSchema = z.object({
   email: z.email({ error: "Enter a valid email" }).toLowerCase(),
-  password: z.minLength(6, {
+  password: z.string().min(6, {
     error: "Passwrod must be atleast 6 characters long",
   }),
   name: z.string({ error: "Enter the name" }),
@@ -11,7 +11,7 @@ export const SignupSchema = z.object({
 
 export const LoginSchema = z.object({
   email: z.email({ error: "Enter a valid email" }),
-  password: z.minLength(6, { error: "Enter a valid passowrd" }),
+  password: z.string().min(6, { error: "Enter a valid passowrd" }),
 });
 
 export const CreateCourseSchema = z.object({
