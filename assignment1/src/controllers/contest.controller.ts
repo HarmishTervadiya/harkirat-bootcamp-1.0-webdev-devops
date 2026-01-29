@@ -158,7 +158,100 @@ const submitMcqAnswer = asyncHandler(async (req, res) => {
     .json(new ApiResponse(true, { isCorrect, pointsEarned: points }, null));
 });
 
-const addDsaProblem = asyncHandler(async (req, res) => {});
+const addDsaProblem = asyncHandler(async (req, res) => {
+  const { contestId } = req.params;
+  const {
+    title,
+    description,
+    tags,
+    points,
+    timeLimit,
+    memoryLimit,
+    testCases,
+  } = req.body;
+  if (
+    [
+      contestId,
+      title,
+      description,
+      tags,
+      points,
+      timeLimit,
+      memoryLimit,
+      testCases,
+    ].some((field) => !field)
+  ) {
+    return res.status(404).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+  }
+
+  if (req.user?.role != "creator")
+    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+
+  if (!Array.isArray(testCases) || testCases.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(false, {}, "TESET_CASES_NEEDED"));
+  }
+
+  const [result] = await sql.transaction([
+    sql`
+        WITH contest_check AS (
+          SELECT id FROM contests WHERE id = ${contestId}
+        ),
+        inserted_problem AS (
+          INSERT INTO dsa_problems
+            (contest_id, title, description, tags, points, time_limit, memory_limit, created_at)
+          SELECT
+            ${contestId},
+            ${title},
+            ${description},
+            ${JSON.stringify(tags)},
+            ${points},
+            ${timeLimit},
+            ${memoryLimit},
+            ${new Date().toDateString()}
+          FROM contest_check
+          RETURNING id
+        ),
+        inserted_test_cases AS (
+          INSERT INTO test_cases
+            (problem_id, input, expected_output, is_hidden, created_at)
+          SELECT
+            ip.id,
+            tc.input,
+            tc."expectedOutput",
+            tc."isHidden",
+            ${new Date().toDateString()}
+          FROM inserted_problem ip,
+          jsonb_to_recordset(${JSON.stringify(testCases)}::jsonb)
+            AS tc(input text, "expectedOutput" text, "isHidden" boolean)
+          RETURNING id
+        )
+        SELECT
+          (SELECT id FROM inserted_problem) AS problem_id,
+          COUNT(*) AS test_case_count
+        FROM inserted_test_cases;
+      `,
+  ]);
+
+  if (!result || !result[0]?.problem_id) {
+    return res
+      .status(404)
+      .json(new ApiResponse(false, null, "CONTEST_NOT_FOUND"));
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      true,
+      {
+        id: result[0].problem_id,
+        contestId,
+        testCaseCount: result[0].test_case_count,
+      },
+      null,
+    ),
+  );
+});
 
 const getDsaProblemDetails = asyncHandler(async (req, res) => {
   const { problemId } = req.params;
@@ -169,10 +262,10 @@ const getDsaProblemDetails = asyncHandler(async (req, res) => {
 
   const data = await Promise.all([
     sql`select * from dsa_problems where id=${problemId}`,
-    sql`select * from test_cases where problem_id=${problemId}`,
+    sql`select * from test_cases where problem_id=${problemId} and is_hidden=false`,
   ]);
 
-  if (!data[0] || !data[1]) {
+  if (data[0].length === 0 || data[1].length === 0) {
     return res
       .status(404)
       .json(new ApiResponse(false, {}, "Dsa problem not found"));
@@ -183,7 +276,88 @@ const getDsaProblemDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(true, { ...data[0][0], test_cases: data[1] }, null));
 });
 
-const submitDsaAnswer = asyncHandler(async (req, res) => {});
+const submitDsaAnswer = asyncHandler(async (req, res) => {
+  const { problemId } = req.params;
+
+  const { code, language } = req.body;
+
+  if (!code || !language) {
+    return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+  }
+
+  const data = await sql`
+     SELECT
+    c.id AS contest_id,
+    m.id AS problem_id,
+    c.creator_id,
+    m.points,
+    c.end_time,
+    (NOW() <= c.end_time) AS contest_active
+    FROM dsa_problems m
+    JOIN contests c ON m.contest_id = c.id
+    WHERE m.id = ${problemId};
+   `;
+  console.log(data);
+  if (data.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(false, {}, "PROBLEM_NOT_FOUND"));
+  }
+
+  const row = data[0]!;
+  if (!row.contest_active) {
+    return res
+      .status(400)
+      .json(new ApiResponse(false, {}, "CONTEST_NOT_ACTIVE"));
+  }
+
+  if (row.creator_id === req.user?.id) {
+    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+  }
+
+  const testCases =
+    await sql`select * from test_cases where problem_id=${problemId}`;
+
+  if (!testCases || testCases.length === 0) {
+    return res.status(404).json(new ApiResponse(false, {}, "TEST_CASES_FOUND"));
+  }
+
+  let testCasesPassed = 0;
+  for (const testCase of testCases) {
+    // Todo: code excution
+    testCasesPassed++;
+  }
+
+  const status = "accepted";
+  const executionTime = 1000;
+
+  const pointsEarned = Math.floor(
+    (testCasesPassed / testCases.length) * row.points,
+  );
+
+  const submittedAnswer = await sql`insert into dsa_submissions 
+  (user_id, problem_id, code, language, status, points_earned, test_cases_passed, total_test_cases, execution_time, submitted_at)
+  values
+  (${req.user?.id}, ${problemId}, ${code}, ${language}, ${status}, ${pointsEarned}, ${testCasesPassed},${testCases.length}, ${executionTime},${new Date().toDateString()})
+  RETURNING *`;
+
+  if (!Array.isArray(submittedAnswer) || submittedAnswer.length === 0) {
+    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+  }
+
+  return res.status(201).json(
+    new ApiResponse(
+      false,
+      {
+        status,
+        pointsEarned,
+        testCasesPassed,
+        totalTestCases: testCases.length,
+      },
+      null,
+    ),
+  );
+});
 
 const getContestLeaderboard = asyncHandler(async (req, res) => {});
 

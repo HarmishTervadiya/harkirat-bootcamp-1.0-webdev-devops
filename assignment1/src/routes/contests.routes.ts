@@ -17,7 +17,7 @@ router.get("/:contestId", verifyJwt, getContest);
 router.post("/:contestId/mcq", verifyJwt, addMcqQuestion);
 router.post("/:contestId/mcq/:questionId/submit", verifyJwt, submitMcqAnswer);
 
-router.route(":contestId/dsa").post(verifyJwt, addDsaProblem);
+router.route("/:contestId/dsa").post(verifyJwt, addDsaProblem);
 
 router.get("/:contestId/leaderboard", verifyJwt, getContestLeaderboard);
 
