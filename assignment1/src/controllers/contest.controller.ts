@@ -95,7 +95,68 @@ const addMcqQuestion = asyncHandler(async (req, res) => {
   return res.status(201).json(new ApiResponse(true, insertedMcq[0], null));
 });
 
-const submitMcqAnswer = asyncHandler(async (req, res) => {});
+const submitMcqAnswer = asyncHandler(async (req, res) => {
+  const { contestId, questionId } = req.params;
+  const { selectedOptionIndex } = req.body;
+  if ([contestId, questionId, selectedOptionIndex].some((field) => !field)) {
+    return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+  }
+
+  const data = await sql`select c.id as contest_id, m.id as question_id,
+    c.creator_id as creator_id,
+    m.points as points, 
+    c.end_time, 
+    (c.end_time >= CAST(NOW() AS DATE)) as contest_active,
+    s.id as submission_id,
+    s.is_correct,
+    m.correct_option_index from 
+    mcq_questions m left join contests c on m.contest_id=c.id 
+    left join mcq_submissions s on s.question_id=m.id  
+    and s.user_id=${req.user?.id}
+    where c.id=${contestId} and m.id=${questionId}`;
+
+  console.log(data);
+
+  if (data.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(false, {}, "QUESTION_NOT_FOUND"));
+  }
+
+  const row = data[0]!;
+  if (!row.contest_active) {
+    return res
+      .status(400)
+      .json(new ApiResponse(false, {}, "CONTEST_NOT_ACTIVE"));
+  }
+
+  if (row.creator_id === req.user?.id) {
+    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+  }
+
+  if (row.is_correct) {
+    return res
+      .status(400)
+      .json(new ApiResponse(false, {}, "ALREADY_SUBMITTED"));
+  }
+
+  const isCorrect = selectedOptionIndex === row.correct_option_index;
+  const points = isCorrect ? row.points || 0 : 0;
+  const date = new Date().toLocaleDateString();
+
+  const createdSubmission =
+    await sql`insert into mcq_submissions (question_id, user_id, selected_option_index, is_correct, points_earned, submitted_at) values 
+    (${questionId},${req.user?.id},${selectedOptionIndex}, ${isCorrect}, ${points}, ${date})`;
+
+  console.log("Inserted submission", createdSubmission);
+  if (!createdSubmission) {
+    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(true, { isCorrect, pointsEarned: points }, null));
+});
 
 const addDsaProblem = asyncHandler(async (req, res) => {});
 
