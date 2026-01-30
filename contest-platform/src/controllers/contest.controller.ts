@@ -10,11 +10,13 @@ const createContest = asyncHandler(async (req, res) => {
       (field) => !field,
     )
   ) {
-    return res.status(400).json(new ApiResponse(false, {}, "INVALID_REQUEST"));
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   if (req.user?.role !== "creator") {
-    return res.status(401).json(new ApiResponse(false, {}, "FORBIDDEN"));
+    return res.status(403).json(new ApiResponse(false, null, "FORBIDDEN"));
   }
 
   const insertedContest = await sql`insert into contests 
@@ -23,12 +25,12 @@ const createContest = asyncHandler(async (req, res) => {
     RETURNING *`;
 
   if (!insertedContest.length || insertedContest.length === 0) {
-    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+    return res.status(500).json(new ApiResponse(false, null, "SERVER_ERROR"));
   }
 
   const contest = insertedContest[0];
   if (!contest) {
-    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+    return res.status(500).json(new ApiResponse(false, null, "SERVER_ERROR"));
   }
 
   return res.status(201).json(new ApiResponse(true, contest, null));
@@ -39,7 +41,7 @@ const getContest = asyncHandler(async (req, res) => {
   if (!contestId) {
     return res
       .status(404)
-      .json(new ApiResponse(false, {}, "Contest not found"));
+      .json(new ApiResponse(false, null, "CONTEST_NOT_FOUND"));
   }
 
   const data = await Promise.all([
@@ -52,7 +54,7 @@ const getContest = asyncHandler(async (req, res) => {
   if (!data[0] || !data[1] || !data[2]) {
     return res
       .status(404)
-      .json(new ApiResponse(false, {}, "Contest not found"));
+      .json(new ApiResponse(false, null, "CONTEST_NOT_FOUND"));
   }
 
   const mcqs = data[1].map(({ correct_option_index, ...rest }) => rest);
@@ -78,7 +80,9 @@ const addMcqQuestion = asyncHandler(async (req, res) => {
     ) ||
     (options && options.length < 0)
   ) {
-    return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   const createdAt = new Date().toISOString();
@@ -89,7 +93,7 @@ const addMcqQuestion = asyncHandler(async (req, res) => {
   RETURNING *`;
 
   if (insertedMcq && !insertedMcq[0]) {
-    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+    return res.status(500).json(new ApiResponse(false, null, "SERVER_ERROR"));
   }
 
   return res.status(201).json(new ApiResponse(true, insertedMcq[0], null));
@@ -98,8 +102,14 @@ const addMcqQuestion = asyncHandler(async (req, res) => {
 const submitMcqAnswer = asyncHandler(async (req, res) => {
   const { contestId, questionId } = req.params;
   const { selectedOptionIndex } = req.body;
-  if ([contestId, questionId, selectedOptionIndex].some((field) => !field)) {
-    return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+  if (
+    [contestId, questionId, selectedOptionIndex].some(
+      (field) => field === undefined || field === null,
+    )
+  ) {
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   const data = await sql`select c.id as contest_id, m.id as question_id,
@@ -120,24 +130,24 @@ const submitMcqAnswer = asyncHandler(async (req, res) => {
   if (data.length === 0) {
     return res
       .status(404)
-      .json(new ApiResponse(false, {}, "QUESTION_NOT_FOUND"));
+      .json(new ApiResponse(false, null, "QUESTION_NOT_FOUND"));
   }
 
   const row = data[0]!;
   if (!row.contest_active) {
     return res
       .status(400)
-      .json(new ApiResponse(false, {}, "CONTEST_NOT_ACTIVE"));
+      .json(new ApiResponse(false, null, "CONTEST_NOT_ACTIVE"));
   }
 
   if (row.creator_id === req.user?.id) {
-    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+    return res.status(403).json(new ApiResponse(false, null, "FORBIDDEN"));
   }
 
   if (row.is_correct) {
     return res
       .status(400)
-      .json(new ApiResponse(false, {}, "ALREADY_SUBMITTED"));
+      .json(new ApiResponse(false, null, "ALREADY_SUBMITTED"));
   }
 
   const isCorrect = selectedOptionIndex === row.correct_option_index;
@@ -150,7 +160,7 @@ const submitMcqAnswer = asyncHandler(async (req, res) => {
 
   console.log("Inserted submission", createdSubmission);
   if (!createdSubmission) {
-    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+    return res.status(500).json(new ApiResponse(false, null, "SERVER_ERROR"));
   }
 
   return res
@@ -181,16 +191,18 @@ const addDsaProblem = asyncHandler(async (req, res) => {
       testCases,
     ].some((field) => !field)
   ) {
-    return res.status(404).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   if (req.user?.role != "creator")
-    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+    return res.status(403).json(new ApiResponse(false, null, "FORBIDDEN"));
 
   if (!Array.isArray(testCases) || testCases.length === 0) {
     return res
-      .status(404)
-      .json(new ApiResponse(false, {}, "TESET_CASES_NEEDED"));
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   const [result] = await sql.transaction([
@@ -240,7 +252,7 @@ const addDsaProblem = asyncHandler(async (req, res) => {
       .json(new ApiResponse(false, null, "CONTEST_NOT_FOUND"));
   }
 
-  return res.status(200).json(
+  return res.status(201).json(
     new ApiResponse(
       true,
       {
@@ -257,7 +269,9 @@ const getDsaProblemDetails = asyncHandler(async (req, res) => {
   const { problemId } = req.params;
 
   if (!problemId) {
-    return res.status(404).json(new ApiResponse(false, {}, null));
+    return res
+      .status(404)
+      .json(new ApiResponse(false, null, "PROBLEM_NOT_FOUND"));
   }
 
   const data = await Promise.all([
@@ -268,7 +282,7 @@ const getDsaProblemDetails = asyncHandler(async (req, res) => {
   if (data[0].length === 0 || data[1].length === 0) {
     return res
       .status(404)
-      .json(new ApiResponse(false, {}, "Dsa problem not found"));
+      .json(new ApiResponse(false, null, "PROBLEM_NOT_FOUND"));
   }
 
   return res
@@ -282,7 +296,9 @@ const submitDsaAnswer = asyncHandler(async (req, res) => {
   const { code, language } = req.body;
 
   if (!code || !language) {
-    return res.status(400).json(new ApiResponse(false, {}, "BAD_REQUEST"));
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
   const data = await sql`
@@ -301,25 +317,27 @@ const submitDsaAnswer = asyncHandler(async (req, res) => {
   if (data.length === 0) {
     return res
       .status(404)
-      .json(new ApiResponse(false, {}, "PROBLEM_NOT_FOUND"));
+      .json(new ApiResponse(false, null, "PROBLEM_NOT_FOUND"));
   }
 
   const row = data[0]!;
   if (!row.contest_active) {
     return res
       .status(400)
-      .json(new ApiResponse(false, {}, "CONTEST_NOT_ACTIVE"));
+      .json(new ApiResponse(false, null, "CONTEST_NOT_ACTIVE"));
   }
 
   if (row.creator_id === req.user?.id) {
-    return res.status(403).json(new ApiResponse(false, {}, "FORBIDDEN"));
+    return res.status(403).json(new ApiResponse(false, null, "FORBIDDEN"));
   }
 
   const testCases =
     await sql`select * from test_cases where problem_id=${problemId}`;
 
   if (!testCases || testCases.length === 0) {
-    return res.status(404).json(new ApiResponse(false, {}, "TEST_CASES_FOUND"));
+    return res
+      .status(404)
+      .json(new ApiResponse(false, null, "PROBLEM_NOT_FOUND"));
   }
 
   let testCasesPassed = 0;
@@ -342,12 +360,12 @@ const submitDsaAnswer = asyncHandler(async (req, res) => {
   RETURNING *`;
 
   if (!Array.isArray(submittedAnswer) || submittedAnswer.length === 0) {
-    return res.status(500).json(new ApiResponse(false, {}, "SERVER_ERROR"));
+    return res.status(500).json(new ApiResponse(false, null, "SERVER_ERROR"));
   }
 
   return res.status(201).json(
     new ApiResponse(
-      false,
+      true,
       {
         status,
         pointsEarned,
@@ -359,7 +377,56 @@ const submitDsaAnswer = asyncHandler(async (req, res) => {
   );
 });
 
-const getContestLeaderboard = asyncHandler(async (req, res) => {});
+// This endpoint was made by @harpalll
+const getContestLeaderboard = asyncHandler(async (req, res) => {
+  const { contestId } = req.params;
+  const leaderboard = await sql`
+  WITH mcq_scores AS (
+    SELECT
+      s.user_id,
+      SUM(s.points_earned) AS mcq_points
+    FROM mcq_submissions s
+    JOIN mcq_questions q ON q.id = s.question_id
+    WHERE q.contest_id = ${contestId}
+    GROUP BY s.user_id
+  ),
+  dsa_best_per_problem AS (
+    SELECT
+      user_id,
+      problem_id,
+      MAX(points_earned) AS best_points
+    FROM dsa_submissions
+    GROUP BY user_id, problem_id
+  ),
+  dsa_scores AS (
+    SELECT
+      db.user_id,
+      SUM(db.best_points) AS dsa_points
+    FROM dsa_best_per_problem db
+    JOIN dsa_problems p ON p.id = db.problem_id
+    WHERE p.contest_id = ${contestId}
+    GROUP BY db.user_id
+  ),
+  total_scores AS (
+    SELECT
+      u.id AS user_id,
+      u.name,
+      COALESCE(m.mcq_points, 0) + COALESCE(d.dsa_points, 0) AS total_points
+    FROM users u
+    LEFT JOIN mcq_scores m ON m.user_id = u.id
+    LEFT JOIN dsa_scores d ON d.user_id = u.id
+  )
+  SELECT
+    user_id AS "userId",
+    name,
+    total_points AS "totalPoints",
+    DENSE_RANK() OVER (ORDER BY total_points DESC) AS rank
+  FROM total_scores
+  WHERE total_points > 0
+  ORDER BY rank, name;
+`;
+  return res.status(200).json(new ApiResponse(true, leaderboard, null));
+});
 
 export {
   createContest,

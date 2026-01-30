@@ -1,7 +1,7 @@
 import { config } from "../../config";
-import {sql} from "../db";
-import {ApiResponse} from "../utils/ApiResponse";
-import {asyncHandler} from "../utils/asyncHandler";
+import { sql } from "../db";
+import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
 import jwt from "jsonwebtoken";
 
 const signUpUser = asyncHandler(async (req, res) => {
@@ -50,7 +50,7 @@ const signUpUser = asyncHandler(async (req, res) => {
       .json(new ApiResponse(false, null, "Failed to sign up the user"));
   }
 
-  return res.status(200).json(
+  return res.status(201).json(
     new ApiResponse(
       true,
       {
@@ -67,15 +67,16 @@ const signUpUser = asyncHandler(async (req, res) => {
 const signInUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json(new ApiResponse(false, {}, "INVALID_REQUEST"));
+    return res
+      .status(400)
+      .json(new ApiResponse(false, null, "INVALID_REQUEST"));
   }
 
-  const user =
-    await sql`select * from users where email=${email}`;
+  const user = await sql`select * from users where email=${email}`;
   if (user.length > 0 && !user[0]) {
     return res
       .status(401)
-      .json(new ApiResponse(false, {}, "INVALID_CREDENTIALS"));
+      .json(new ApiResponse(false, null, "INVALID_CREDENTIALS"));
   }
 
   const isPasswordCorrect = Bun.password.verifySync(
@@ -85,7 +86,9 @@ const signInUser = asyncHandler(async (req, res) => {
   );
 
   if (!isPasswordCorrect) {
-    return res.status(401).json(new ApiResponse(false, {}, "INVALID_PASSWORD"));
+    return res
+      .status(401)
+      .json(new ApiResponse(false, null, "INVALID_CREDENTIALS"));
   }
 
   const payload = {
