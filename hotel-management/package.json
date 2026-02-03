@@ -4,16 +4,29 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun src/index.ts -watch "
+    "start": "bun --watch src/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bcrypt": "^6.0.0",
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
     "@types/express": "^5.0.6",
-    "express": "^5.2.1"
+    "@types/node": "^25.2.0",
+    "@types/pg": "^8.16.0",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "http-status-codes": "^2.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0",
+    "prisma": "^7.3.0",
+    "zod": "^4.3.6"
   }
 }
