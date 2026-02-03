@@ -24,7 +24,7 @@ model User{
   email String @unique
   password String
   role UserRole
-  phone Int
+  phone String
   createdAt DateTime
   updatedAt DateTime 
 

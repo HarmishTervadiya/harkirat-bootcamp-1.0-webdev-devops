@@ -6,7 +6,7 @@ type AsyncRequestHandler = (
   next: NextFunction,
 ) => Promise<any>;
 
-export const asyncHandler = async (requestHandler: AsyncRequestHandler) => {
+export const asyncHandler = (requestHandler: AsyncRequestHandler) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
   };
