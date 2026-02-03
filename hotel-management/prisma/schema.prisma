@@ -6,11 +6,105 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+enum UserRole{
+  customer
+  owner
+}
 
+model User{
+  id String @id @default(uuid())
+  name String 
+  email String @unique
+  password String
+  role UserRole
+  phone Int
+  createdAt DateTime
+  updatedAt DateTime 
+
+  //relations
+  hotels Hotel[]
+  bookings Booking[]
+  review Review[]
+}
+
+model Hotel{
+  id String @id @default(uuid())
+  name String
+  description String
+  city String
+  country String
+  amenities Json[] @default([])
+  rating Decimal @default(0.0)
+  totalReviews Int @default(0)
+
+  //relations
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id])
+  reviews Review[]
+  rooms Room[]
+  bookings Booking[]
+}
+
+model Room{
+  id String @id @default(uuid())
+  roomNumber String @unique
+  roomType String
+  pricePerNight Decimal
+  maxOccupancy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  //relations
+  hotelId String
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+
+  bookings Booking[]
+}
+
+enum BookingStatus{
+  confirmed
+  cancelled
+}
+
+model Booking{
+  id String @id @default(uuid())
+  checkInDate DateTime
+  checkOutDate DateTime
+  guests Int
+  totalPrice Decimal
+  status BookingStatus
+  bookingDate DateTime
+  cancelledAt DateTime?
+
+  //relations
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  hotelId String
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  roomId String
+  room Room @relation(fields: [roomId], references: [id])
+  review Review[]
+}
+
+model Review{
+  id String @id @default(uuid())
+  rating Int
+  comment String
+  createdAt DateTime @default(now())
+
+ 
+  //relations
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  hotelId String
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  bookingId String
+  booking Booking @relation(fields: [bookingId], references: [id]) 
+}
