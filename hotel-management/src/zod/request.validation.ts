@@ -20,7 +20,7 @@ export const SignupSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters",
   }),
-  role: z.enum(UserRole,{
+  role: z.enum(UserRole, {
     message: "Enter a valid role",
   }),
   phone: z
@@ -31,4 +31,12 @@ export const SignupSchema = z.object({
     .max(15, {
       message: "Enter a valid phone number",
     }),
+});
+
+export const createHotelSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  city: z.string(),
+  country: z.string(),
+  amenities: z.array(z.string()),
 });
