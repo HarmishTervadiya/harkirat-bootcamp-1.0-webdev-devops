@@ -40,3 +40,10 @@ export const createHotelSchema = z.object({
   country: z.string(),
   amenities: z.array(z.string()),
 });
+
+export const addHotelRoomSchema = z.object({
+  roomNumber: z.string(),
+  roomType: z.string(),
+  pricePerNight: z.number(),
+  maxOccupancy: z.number(),
+});

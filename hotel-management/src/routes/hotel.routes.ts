@@ -6,17 +6,37 @@ import {
   roleValidator,
   validateRequestBody,
 } from "../middlewares/validation.middleware";
-import { createHotelSchema } from "../zod/request.validation";
-import { createHotel } from "../controllers/hotel.controller";
+import {
+  addHotelRoomSchema,
+  createHotelSchema,
+} from "../zod/request.validation";
+import {
+  addHotelRoom,
+  createHotel,
+  getHotelDetails,
+  getHotels,
+} from "../controllers/hotel.controller";
 
 const router = Router();
 
+router
+  .route("/")
+  .get(verifyJwt, getHotels)
+  .post(
+    verifyJwt,
+    validateRequestBody(createHotelSchema),
+    roleValidator(["owner"]),
+    createHotel,
+  );
+
+router.get("/:hotelId", verifyJwt, getHotelDetails);
+
 router.post(
-  "/",
+  "/:hotelId/rooms",
   verifyJwt,
-  validateRequestBody(createHotelSchema),
+  validateRequestBody(addHotelRoomSchema),
   roleValidator(["owner"]),
-  createHotel,
+  addHotelRoom,
 );
 
 export default router;
