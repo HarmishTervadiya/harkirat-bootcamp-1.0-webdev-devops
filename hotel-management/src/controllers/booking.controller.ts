@@ -43,6 +43,7 @@ export const createBooking = asyncHandler(async (req, res) => {
       const existingBooking = await tx.booking.findFirst({
         where: {
           roomId,
+          status: "confirmed",
           AND: [
             { checkInDate: { lt: checkOut } },
             { checkOutDate: { gt: checkIn } },
@@ -164,4 +165,3 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     .status(StatusCodes.OK)
     .json(new ApiResponse(true, cancelledBooking, null));
 });
-
