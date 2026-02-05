@@ -109,4 +109,7 @@ model Review{
   hotel Hotel @relation(fields: [hotelId], references: [id])
   bookingId String
   booking Booking @relation(fields: [bookingId], references: [id]) 
+
+  //Contraints
+  @@unique([userId, bookingId]) // One review per booking
 }

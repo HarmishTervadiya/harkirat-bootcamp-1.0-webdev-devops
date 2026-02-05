@@ -3,6 +3,10 @@ import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { getDBTimestamps } from "../utils/getDBTimestamps";
+import type {
+  HotelWhereInput,
+  RoomWhereInput,
+} from "../../generated/prisma/models";
 
 export const createHotel = asyncHandler(async (req, res) => {
   const createdHotel = await prisma.hotel.create({
@@ -58,38 +62,17 @@ export const addHotelRoom = asyncHandler(async (req, res) => {
     .json(new ApiResponse(true, insertedRoom, null));
 });
 
-type HotelWhere = {
-  city?: {
-    equals?: string;
-    mode?: "insensitive";
-  };
-  country?: {
-    equals?: string;
-    mode?: "insensitive";
-  };
-  rating?: {
-    gte?: number;
-  };
-};
-
-type RoomWhere = {
-  pricePerNight?: {
-    gte?: number;
-    lte?: number;
-  };
-};
-
 export const getHotels = asyncHandler(async (req, res) => {
   const { city, country, minPrice, maxPrice, minRating } = req.query;
 
-  const where: HotelWhere = {};
+  const where: HotelWhereInput = {};
 
   city && (where.city = { equals: city.toString(), mode: "insensitive" });
   country &&
     (where.country = { equals: country.toString(), mode: "insensitive" });
   minRating && (where.rating = { gte: Number(minRating) });
 
-  const roomWhere: RoomWhere = {};
+  const roomWhere: RoomWhereInput = {};
 
   if (minPrice || maxPrice) {
     roomWhere.pricePerNight = {};

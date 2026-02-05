@@ -25,7 +25,7 @@ router
   .post(
     verifyJwt,
     validateRequestBody(createHotelSchema),
-    roleValidator(["owner"]),
+    roleValidator(["customer"]),
     createHotel,
   );
 
