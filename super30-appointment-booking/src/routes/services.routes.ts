@@ -7,24 +7,27 @@ import {
 import {
   addServiceAvailability,
   createService,
+  getServices,
 } from "../controller/services.controller";
 import { validateRequestBody } from "../middleware/body.validation";
 const router = Router();
 
-router.post(
-  "/",
-  authenticate,
-  roleCheck("SERVICE_PROVIDER"),
-  validateRequestBody(createServiceSchema),
-  createService,
-);
+router
+  .route("/")
+  .get(getServices)
+  .post(
+    authenticate,
+    roleCheck("SERVICE_PROVIDER"),
+    validateRequestBody(createServiceSchema),
+    createService,
+  );
 
 router.post(
   "/:serviceId/availability",
   authenticate,
   roleCheck("SERVICE_PROVIDER"),
   validateRequestBody(setAvailabilitySchema),
-  addServiceAvailability
+  addServiceAvailability,
 );
 
 export default router;

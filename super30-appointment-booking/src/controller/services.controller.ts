@@ -1,4 +1,6 @@
 import { prisma } from "../../db";
+import { ServiceType } from "../../generated/prisma/enums";
+import type { ServiceWhereInput } from "../../generated/prisma/models";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const createService = asyncHandler(async (req, res) => {
@@ -71,4 +73,19 @@ export const addServiceAvailability = asyncHandler(async (req, res) => {
   }
 
   return res.status(201).json(newAvailability);
+});
+
+export const getServices = asyncHandler(async (req, res) => {
+  const { type } = req.query;
+  let filter: ServiceWhereInput = {};
+
+  if (type && !Object.values(ServiceType).includes(type as any)) {
+    return res.status(400).json({ error: "Invalid service type" });
+  }
+
+  type && (filter.type = type as ServiceType);
+
+  const services = await prisma.service.findMany({ where: filter });
+
+  return res.status(200).json(services);
 });
