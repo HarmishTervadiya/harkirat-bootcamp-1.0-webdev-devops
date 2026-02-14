@@ -1,0 +1,33 @@
+meta {
+  name: addService
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/services
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{providerAccessToken}}
+}
+
+body:json {
+  {
+  "name":"Physiotherapy",
+  "type":"MEDICAL",
+  "durationMinutes":30
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

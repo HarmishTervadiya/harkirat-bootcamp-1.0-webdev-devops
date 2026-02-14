@@ -1,0 +1,33 @@
+meta {
+  name: addServiceAvaiilabitlity
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/services/2d00a3c9-b468-4f77-8eab-0e2eaa1ac837/availability
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{providerAccessToken}}
+}
+
+body:json {
+  {
+  "dayOfWeek":4,
+  "startTime":"09:00",
+  "endTime":"12:00"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

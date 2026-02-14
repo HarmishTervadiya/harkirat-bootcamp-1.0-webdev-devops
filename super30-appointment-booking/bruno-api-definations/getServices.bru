@@ -1,0 +1,28 @@
+meta {
+  name: getServices
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/services/?type=MEDICAL
+  body: json
+  auth: inherit
+}
+
+params:query {
+  type: MEDICAL
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

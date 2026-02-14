@@ -1,0 +1,29 @@
+meta {
+  name: providerDailySchedule
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/providers/me/schedule?date=2004-12-02
+  body: json
+  auth: inherit
+}
+
+params:query {
+  date: 2004-12-02
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{providerAccessToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
