@@ -8,6 +8,7 @@ import {
   addServiceAvailability,
   createService,
   getServices,
+  getServiceSlots,
 } from "../controller/services.controller";
 import { validateRequestBody } from "../middleware/body.validation";
 const router = Router();
@@ -29,5 +30,10 @@ router.post(
   validateRequestBody(setAvailabilitySchema),
   addServiceAvailability,
 );
+
+router.get("/:serviceId/slots", 
+  authenticate,
+  getServiceSlots
+)
 
 export default router;

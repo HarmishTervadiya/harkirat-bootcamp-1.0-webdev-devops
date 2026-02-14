@@ -83,4 +83,6 @@ model Appointment {
   user      User    @relation(fields: [userId], references: [id])
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([slotId, status])
 }
