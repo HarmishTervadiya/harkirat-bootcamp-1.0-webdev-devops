@@ -1,4 +1,3 @@
-import { isDate } from "node:util/types";
 import { prisma } from "../../db";
 import { ServiceType } from "../../generated/prisma/enums";
 import type { ServiceWhereInput } from "../../generated/prisma/models";
@@ -119,6 +118,12 @@ export const getServiceSlots = asyncHandler(async (req, res) => {
 
   if (!service) {
     return res.status(404).json({ error: "Service not found" });
+  }
+
+  if (service.providerId !== req.user?.id) {
+    return res
+      .status(403)
+      .json({ error: "Service does not belong to provider" });
   }
 
   console.log("Service retrived", service.id);

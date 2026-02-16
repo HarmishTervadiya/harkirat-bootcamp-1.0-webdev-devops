@@ -1,5 +1,4 @@
 import { prisma } from "../../db";
-import type { Appointment } from "../../generated/prisma/client";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const providerDailySchedule = asyncHandler(async (req, res) => {
